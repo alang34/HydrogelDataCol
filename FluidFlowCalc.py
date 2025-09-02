@@ -19,7 +19,7 @@ gelTemp = 300
 inletTemp = 300
 inletPressure = 101325 # Pa
 inletDensity = inletPressure / (gasConstant * inletTemp) # kg/m^3
-volumetricFlowRateSCFH = 30 # scfh
+volumetricFlowRateSCFH = 180 # scfh
 
 volumetricFlowRate = volumetricFlowRateSCFH * 0.0000078658
 snakeVelocity = volumetricFlowRate / snakeCrossSection
@@ -27,6 +27,7 @@ snakeReynolds = (inletDensity*snakeVelocity*snakeHydraulicDiameter) / airViscosi
 timeInSnake = snakeLength / snakeVelocity
 
 print(snakeVelocity)
+print(snakeReynolds)
 # df = pd.read_csv('data1.csv')
 # a = df.to_numpy()
 # timestampl = a[0:, 0]

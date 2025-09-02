@@ -41,7 +41,5 @@ void loop() {
 
 
   //prints absolute humidity & temp that will be going into csv
-  Serial.println(AH);
-  Serial.println(temp);
-  
+  Serial.print(temp);
 }
