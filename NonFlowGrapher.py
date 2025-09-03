@@ -6,9 +6,9 @@ df = pd.read_csv("HydrogelDataCol/Actual Data/Nonflow Data/nonflow_run_2.csv")
 
 
 plt.figure(figsize=(8, 6))
-plt.plot(df["Timestamp"], df["RH"])
-plt.xlabel("Timestamp (seconds)")
-plt.ylabel("Relative Humidity (%)")
-plt.title(f'Timestamp vs RH')
+plt.plot(df["AH"], df["Temp"])
+plt.xlabel("Absolute Humidity")
+plt.ylabel("Temperature (°C)")
+plt.title(f'AH vs Temp - Run 2')
 plt.grid(True)
 plt.show()
