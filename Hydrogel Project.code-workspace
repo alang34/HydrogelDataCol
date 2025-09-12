@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "SHT30 Sensor",
+			"path": "../../../../../PlatformIO/Projects/SHT30 Sensor"
+		}
+	],
+	"settings": {}
+}
