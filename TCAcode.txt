@@ -1,0 +1,97 @@
+#include <Wire.h>
+#include <Arduino.h>
+#include <SPI.h>
+const uint8_t TCA_ADDR  = 0x70;
+
+//ADD MORE OF THESE FOR MORE SENSORS
+
+const uint8_t SHT0_ADDR = 0x44;
+const uint8_t SHT1_ADDR = 0x44;
+const uint8_t SHT2_ADDR = 0x44;
+
+static bool crc_ok(uint8_t msb, uint8_t lsb, uint8_t crc) {
+  uint8_t c = 0xFF;
+  auto step = [&](uint8_t x){
+    c ^= x;
+    for (uint8_t i = 0; i < 8; i++)
+      c = (c & 0x80) ? ((c << 1) ^ 0x31) : (c << 1);
+  };
+  step(msb); step(lsb);
+  return c == crc;
+}
+bool readSHT31_onChannel(uint8_t chan, uint8_t sht_addr, float &tC, float &rh) {
+  Wire.beginTransmission(TCA_ADDR);
+  Wire.write(1 << chan);
+  if (Wire.endTransmission() != 0) return false;
+  delay(3);
+  Wire.beginTransmission(sht_addr);
+  Wire.write(0x2C); Wire.write(0x06);
+  if (Wire.endTransmission() != 0) return false;
+
+  delay(20);
+  Wire.requestFrom((int)sht_addr, 6);
+  if (Wire.available() != 6) return false;
+  uint8_t tMSB = Wire.read(), tLSB = Wire.read(), tCRC = Wire.read();
+  uint8_t hMSB = Wire.read(), hLSB = Wire.read(), hCRC = Wire.read();
+  if (!crc_ok(tMSB, tLSB, tCRC) || !crc_ok(hMSB, hLSB, hCRC)) return false;
+
+  uint16_t traw = ((uint16_t)tMSB << 8) | tLSB;
+  uint16_t hraw = ((uint16_t)hMSB << 8) | hLSB;
+
+  tC = -45.0f + 175.0f * (float)traw / 65535.0f;
+  rh = 100.0f * (float)hraw / 65535.0f;
+
+  if (tC < -45.0f || tC > 130.0f || rh < 0.0f || rh > 100.0f) return false;
+  return true;
+}
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+  Wire.setClock(100000);
+  Serial.println("SHT31 test");
+
+  // CHANGE CH VALUE FOR MORE SENSORS
+
+  for (uint8_t ch = 0; ch < 3; ch++) {
+    Wire.beginTransmission(TCA_ADDR);
+    Wire.write(1 << ch);
+    Wire.endTransmission();
+    delay(10);
+
+    Wire.beginTransmission(SHT0_ADDR);
+    if (Wire.endTransmission() == 0)
+      Serial.print("Sensor on channel "), Serial.print(ch),
+      Serial.println(" found at 0x44");
+    else {
+      Wire.beginTransmission(SHT1_ADDR);
+      if (Wire.endTransmission() == 0)
+        Serial.print("Sensor on channel "), Serial.print(ch),
+        Serial.println(" found at 0x45");
+      else
+        Serial.print("No sensor found on channel "), Serial.println(ch);
+    }
+  }
+}
+void loop() {
+  float t0, h0, t1, h1, t2, h2;
+
+  //ADD OK3-7 for more sensors
+
+  bool ok0 = readSHT31_onChannel(0, SHT0_ADDR, t0, h0);
+  bool ok1 = readSHT31_onChannel(1, SHT1_ADDR, t1, h1);
+  bool ok2 = readSHT31_onChannel(2, SHT2_ADDR, t2, h2);
+
+  if (ok0) { Serial.print(t0, 2); Serial.print(","); Serial.print(h0, 2); }
+  else     { Serial.print("nan,nan"); }
+  Serial.print(",");
+
+  if (ok1) { Serial.print(t1, 2); Serial.print(","); Serial.print(h1, 2); }
+  else     { Serial.print("nan,nan"); }
+  Serial.print(",");
+
+  if (ok2) { Serial.print(t2, 2); Serial.print(","); Serial.print(h2, 2); }
+  else     { Serial.print("nan,nan"); }
+  Serial.println();
+
+  delay(1000);
+}
